@@ -24,8 +24,16 @@ else
     pip install numpy==1.24.4
     pip install requests==2.31.0
 
-    # Try optional packages individually
-    pip install opencv-python-headless==4.7.1.72 || echo "⚠️ OpenCV failed"
+    # Install OpenCV and fail loudly if missing
+    echo "📷 Installing OpenCV..."
+    if pip install opencv-python-headless==4.7.1.72; then
+        echo "✅ OpenCV installed"
+    else
+        echo "❌ OpenCV installation failed – deployment cannot continue"
+        exit 1
+    fi
+
+    # Try other optional dependencies
     pip install pyzbar==0.1.9 || echo "⚠️ pyzbar failed"
     pip install google-api-python-client==2.100.0 || echo "⚠️ Google API failed"
     pip install Pillow==9.5.0 || echo "⚠️ Pillow failed"

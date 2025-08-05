@@ -96,14 +96,15 @@ def process_image():
         for detection in detections:
             try:
                 # Extract registration number
-                barcode_data = detection.data.decode('utf-8')
+                barcode_data = detection['data']
                 reg_number = qr_processor.extract_registration_number(barcode_data)
+                code_type = detection['type']
                 
                 if reg_number and validate_urk_number(reg_number):
                     student_name = extract_name_from_urk(reg_number)
                     
                     result = {
-                        'type': detection.type.name,
+                        'type': code_type,
                         'data': barcode_data,
                         'reg_number': reg_number,
                         'student_name': student_name,
@@ -122,7 +123,7 @@ def process_image():
                     results.append(result)
                 else:
                     results.append({
-                        'type': detection.type.name,
+                        'type': code_type,
                         'data': barcode_data,
                         'reg_number': None,
                         'student_name': None,

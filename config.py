@@ -59,6 +59,6 @@ SAVE_DEBUG_IMAGES = True  # Save processed images for debugging
 # Email reporting configuration
 SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
 SMTP_PORT   = int(os.environ.get('SMTP_PORT', 587))
-SMTP_USER   = os.environ.get('SMTP_USER', 'franzkingstein@gmail.com')        # your SMTP username
-SMTP_PASS   = os.environ.get('SMTP_PASS', 'joesaustein@gmail.com')        # your SMTP password or app password
-TO_EMAIL    = os.environ.get('TO_EMAIL', 'franzkingstein@gmail.com')         # recipient email for attendance reports
+SMTP_USER   = os.environ.get('SMTP_USER', '')        # your SMTP username
+SMTP_PASS   = os.environ.get('SMTP_PASS', '')        # your SMTP password or app password
+TO_EMAIL    = os.environ.get('TO_EMAIL', '')         # recipient email for attendance reports

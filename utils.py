@@ -97,6 +97,21 @@ def validate_regno(regno):
     
     return bool(re.match(karunya_pattern, regno))
 
+# Alias for compatibility with app.py imports
+
+def validate_urk_number(regno):
+    """Alias to validate_regno for URK registrations"""
+    return validate_regno(regno)
+
+
+def extract_name_from_urk(regno):
+    """
+    Placeholder to extract a student name from URK registration number.
+    Currently returns the raw registration number.
+    """
+    # TODO: implement actual name extraction/mapping if needed
+    return regno
+
 def get_current_timestamp():
     """
     Get current timestamp in readable format

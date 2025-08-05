@@ -1,6 +1,6 @@
 # Sensitive files - DO NOT COMMIT
 credentials.json
-*.json
+sheets_config.json
 
 # Python
 __pycache__/
@@ -54,3 +54,11 @@ logs/
 # Temporary files
 *.tmp
 *.temp
+
+# Flask specific
+instance/
+.webassets-cache
+
+# Environment variables
+.env
+.flaskenv

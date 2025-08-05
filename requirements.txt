@@ -1,9 +1,28 @@
-opencv-python==4.8.1.78
-pytesseract==0.3.10
-google-api-python-client==2.108.0
-google-auth-httplib2==0.1.1
-google-auth-oauthlib==1.1.0
+# Smart Attendance System Requirements
+# Works for both desktop and web deployment
+
+# Computer Vision and Image Processing
+opencv-python-headless==4.8.1.78  # headless version for web deployment
 Pillow==10.1.0
-numpy<2
+numpy==1.26.2
+
+# Barcode Detection
 pyzbar==0.1.9
-tkinter
+
+# OCR (for desktop version)
+pytesseract==0.3.10
+
+# Google Sheets Integration
+google-api-python-client==2.108.0
+google-auth==2.25.2
+google-auth-oauthlib==1.1.0
+google-auth-httplib2==0.2.0
+
+# Web Framework (for web deployment)
+Flask==3.0.0
+gunicorn==21.2.0
+
+# Other Dependencies
+requests==2.31.0
+cachetools==5.3.2
+python-dotenv==1.0.0

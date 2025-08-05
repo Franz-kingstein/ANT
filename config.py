@@ -1,3 +1,5 @@
+import os  # add at top if missing
+
 # Configuration settings for the Smart Attendance System
 
 # Google Sheets Configuration  
@@ -53,3 +55,10 @@ ATTENDANCE_TIMEOUT = 2  # Seconds to wait before allowing next scan (reduced for
 # Debug Mode
 DEBUG_MODE = True  # Set to False in production
 SAVE_DEBUG_IMAGES = True  # Save processed images for debugging
+
+# Email reporting configuration
+SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
+SMTP_PORT   = int(os.environ.get('SMTP_PORT', 587))
+SMTP_USER   = os.environ.get('SMTP_USER', 'franzkingstein@gmail.com')        # your SMTP username
+SMTP_PASS   = os.environ.get('SMTP_PASS', 'joesaustein@gmail.com')        # your SMTP password or app password
+TO_EMAIL    = os.environ.get('TO_EMAIL', 'franzkingstein@gmail.com')         # recipient email for attendance reports

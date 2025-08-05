@@ -14,9 +14,15 @@ import config
 
 class SheetsManager:
     def __init__(self):
+        """
+        Initialize SheetsManager with a dynamic sheet tab name based on timestamp.
+        """
+        from datetime import datetime
         self.service = None
         self.spreadsheet_id = config.SHEET_ID
-        self.sheet_name = config.SHEET_NAME
+        # Generate a unique sheet tab name with timestamp
+        ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+        self.sheet_name = f"{config.SHEET_NAME}_{ts}"
         self.credentials_file = config.CREDENTIALS_FILE
         
     def initialize_sheets_api(self):
@@ -44,8 +50,9 @@ class SheetsManager:
             log_message("Google Sheets API initialized successfully")
             log_message(f"Connected to spreadsheet: {sheet_metadata.get('properties', {}).get('title', 'Unknown')}")
             
-            # Ensure the attendance sheet exists and has headers
-            self._setup_attendance_sheet()
+            # Create the attendance sheet tab and set headers
+            self._create_attendance_sheet()
+            self._add_headers(['Date', 'Time', 'Name', 'Registration Number', 'Status'])
             
             return True
             

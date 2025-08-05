@@ -16,6 +16,8 @@ from io import BytesIO
 from PIL import Image
 import threading
 import time
+import atexit
+from mailer import send_attendance_report
 
 # Import our existing modules
 from qr_processor import QRProcessor
@@ -292,11 +294,18 @@ def internal_error(error):
     return render_template('500.html'), 500
 
 if __name__ == '__main__':
-    # Initialize sheets manager
+    # Initialize sheets manager and create a new attendance sheet
     init_sheets_manager()
-    
+    # Prompt for email address to send the report on exit
+    user_email = None
+    try:
+        user_email = input("Enter your email address to receive the attendance report on exit: ").strip()
+    except Exception:
+        pass
+    # Register exit hook to email the attendance report
+    if sheets_manager and user_email:
+        atexit.register(lambda: send_attendance_report(sheets_manager.get_attendance(), user_email))
     # Get port from environment (for Render)
     port = int(os.environ.get('PORT', 5000))
-    
     # Run app
     app.run(host='0.0.0.0', port=port, debug=False)

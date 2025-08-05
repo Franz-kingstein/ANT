@@ -16,6 +16,7 @@ This guide explains how to deploy the Smart Attendance System as a web applicati
 ### 1. Prepare Your Repository
 
 The web version includes these additional files:
+
 - `app.py` - Flask web application
 - `templates/` - HTML templates
 - `requirements-web.txt` - Web-specific dependencies
@@ -25,15 +26,18 @@ The web version includes these additional files:
 ### 2. Deploy to Render
 
 1. **Create Render Account**:
+
    - Go to [render.com](https://render.com)
    - Sign up with GitHub account
 
 2. **Connect Repository**:
+
    - Click "New +" → "Web Service"
    - Connect your GitHub repository: `Franz-kingstein/ANT`
    - Select the repository
 
 3. **Configure Deployment**:
+
    ```
    Name: smart-attendance-system
    Environment: Python 3
@@ -42,6 +46,7 @@ The web version includes these additional files:
    ```
 
 4. **Set Environment Variables**:
+
    - `SECRET_KEY`: Auto-generate
    - `GOOGLE_CREDENTIALS_JSON`: Paste your credentials.json content
 
@@ -52,10 +57,12 @@ The web version includes these additional files:
 ### 3. Configure Google Sheets
 
 1. **Get Your Service Account JSON**:
+
    - Download your `credentials.json` from Google Cloud Console
    - Copy the entire JSON content
 
 2. **Set Environment Variable**:
+
    - In Render dashboard, go to Environment
    - Add `GOOGLE_CREDENTIALS_JSON` variable
    - Paste the JSON content as the value
@@ -69,9 +76,11 @@ The web version includes these additional files:
 ### For Students:
 
 1. **Access the System**:
+
    - Visit your Render app URL (e.g., `https://smart-attendance-system.onrender.com`)
 
 2. **Scan ID Card**:
+
    - Click "Scan ID Card"
    - Allow camera permissions
    - Point camera at ID card barcode
@@ -85,6 +94,7 @@ The web version includes these additional files:
 ### For Administrators:
 
 1. **View Records**:
+
    - Click "View Records"
    - Select date to view attendance
    - Search and filter records
@@ -98,6 +108,7 @@ The web version includes these additional files:
 ## 🔧 Technical Details
 
 ### Architecture:
+
 ```
 Browser → Flask App → pyzbar → Google Sheets API
    ↑         ↑         ↑            ↑
@@ -107,6 +118,7 @@ Camera   OpenCV   Barcode      Cloud Storage
 ```
 
 ### Key Components:
+
 - **Flask**: Web framework and API endpoints
 - **OpenCV**: Image processing and enhancement
 - **pyzbar**: Multi-format barcode detection
@@ -114,6 +126,7 @@ Camera   OpenCV   Barcode      Cloud Storage
 - **JavaScript**: Camera access and real-time processing
 
 ### API Endpoints:
+
 - `GET /` - Main dashboard
 - `GET /upload` - Scanning interface
 - `GET /attendance` - Records viewer
@@ -143,16 +156,19 @@ Camera   OpenCV   Barcode      Cloud Storage
 ### Common Issues:
 
 1. **Camera Not Working**:
+
    - Ensure HTTPS (required for camera access)
    - Check browser permissions
    - Try different browsers
 
 2. **Google Sheets Error**:
+
    - Verify `GOOGLE_CREDENTIALS_JSON` environment variable
    - Check service account permissions
    - Ensure sheet is shared with service account
 
 3. **Barcode Detection Issues**:
+
    - Ensure good lighting
    - Hold camera steady
    - Try uploading image instead
@@ -163,6 +179,7 @@ Camera   OpenCV   Barcode      Cloud Storage
    - Ensure build.sh has execute permissions
 
 ### Debug Commands:
+
 ```bash
 # Local testing
 python app.py
@@ -177,16 +194,19 @@ python -c "from pyzbar import pyzbar; print('pyzbar working')"
 ## 🌟 Advanced Features
 
 ### Custom Domain:
+
 - Add custom domain in Render dashboard
 - Configure DNS settings
 - SSL certificate automatically provided
 
 ### Scaling:
+
 - Render automatically scales based on traffic
 - Upgrade to paid plan for better performance
 - Monitor usage in dashboard
 
 ### Monitoring:
+
 - Built-in health checks
 - Performance metrics
 - Error logging and alerts
@@ -199,6 +219,7 @@ Your deployed application will be available at:
 ## 📞 Support
 
 For deployment issues:
+
 - Check Render documentation
 - Review application logs
 - Contact support through GitHub issues

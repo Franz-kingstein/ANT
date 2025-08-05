@@ -25,12 +25,14 @@ This system uses computer vision to automatically mark attendance by scanning st
 ## 🛠 Installation
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/Franz-kingstein/ANT.git
    cd ANT
    ```
 
 2. **Create virtual environment:**
+
    ```bash
    python -m venv attendance_env
    source attendance_env/bin/activate  # Linux/Mac
@@ -39,11 +41,13 @@ This system uses computer vision to automatically mark attendance by scanning st
    ```
 
 3. **Install dependencies:**
+
    ```bash
    pip install -r requirements.txt
    ```
 
 4. **Setup Google Sheets API:**
+
    - Create a Google Cloud Project
    - Enable Google Sheets API
    - Create service account credentials
@@ -57,6 +61,7 @@ This system uses computer vision to automatically mark attendance by scanning st
 ## 🎮 Usage
 
 1. **Run the system:**
+
    ```bash
    python main.py
    ```
@@ -85,11 +90,13 @@ attendance/
 ## 🔧 Configuration
 
 ### Camera Settings (`config.py`)
+
 - `CAMERA_INDEX`: Camera device index (0=built-in, 2=Iriun)
 - `CAMERA_WIDTH/HEIGHT`: Resolution settings
 - `FPS`: Frame rate
 
 ### Google Sheets (`config.py`)
+
 - `SHEET_ID`: Your Google Sheet ID
 - `SHEET_NAME`: Name of the sheet tab
 - `CREDENTIALS_FILE`: Path to Google API credentials
@@ -117,6 +124,7 @@ attendance/
 ## 👨‍💻 Developer
 
 **Franz Kingstein**
+
 - GitHub: [@Franz-kingstein](https://github.com/Franz-kingstein)
 - Project: Smart Attendance System for Karunya Institute
 
@@ -134,6 +142,7 @@ This project is developed for educational purposes at Karunya Institute.
 ---
 
 **Made with ❤️ for Karunya Institute Students**
+
 - **User-friendly Interface**: Simple GUI with camera preview
 
 ## System Requirements

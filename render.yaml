@@ -14,5 +14,5 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: GOOGLE_CREDENTIALS_JSON
-        sync: false  # Set this manually in Render dashboard
+        sync: false # Set this manually in Render dashboard
     healthCheckPath: "/api/status"

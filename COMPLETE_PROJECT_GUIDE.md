@@ -5,6 +5,7 @@
 The **Smart Attendance System** is a computer vision-based solution designed specifically for **Karunya Institute** that automates the attendance marking process using student ID cards. The system scans barcodes (CODE128, QR codes) from ID cards using a camera and automatically logs attendance to Google Sheets with duplicate prevention.
 
 ### 🌟 Key Features
+
 - **Multi-barcode Detection**: Supports CODE128, QR codes, DataMatrix, and more
 - **Real-time Processing**: Live camera feed with instant barcode recognition
 - **Google Sheets Integration**: Automated attendance logging with timestamps
@@ -35,6 +36,7 @@ The **Smart Attendance System** is a computer vision-based solution designed spe
 ## 🔧 Technical Stack
 
 ### Core Technologies
+
 - **Python 3.12+**: Main programming language
 - **OpenCV 4.8+**: Computer vision and camera handling
 - **pyzbar 0.1.9**: Multi-barcode detection library
@@ -43,6 +45,7 @@ The **Smart Attendance System** is a computer vision-based solution designed spe
 - **PIL/Pillow**: Image processing support
 
 ### Hardware Requirements
+
 - **Camera**: Any USB camera or smartphone camera (via Iriun Webcam)
 - **Resolution**: Minimum 720p, recommended 1080p for better accuracy
 - **OS**: Linux (Ubuntu/Debian recommended), Windows, macOS
@@ -91,12 +94,14 @@ pip install -r requirements.txt
 ### Step 2: System Dependencies
 
 #### Ubuntu/Debian:
+
 ```bash
 sudo apt update
 sudo apt install python3-opencv libzbar0 tesseract-ocr
 ```
 
 #### Windows:
+
 ```bash
 # Install via pip (dependencies included)
 pip install opencv-python pyzbar pytesseract
@@ -105,11 +110,13 @@ pip install opencv-python pyzbar pytesseract
 ### Step 3: Google Sheets API Setup
 
 1. **Create Google Cloud Project**:
+
    - Go to [Google Cloud Console](https://console.cloud.google.com/)
    - Create new project or select existing one
    - Enable Google Sheets API and Google Drive API
 
 2. **Create Service Account**:
+
    ```bash
    # Navigate to IAM & Admin > Service Accounts
    # Create new service account with Editor role
@@ -117,6 +124,7 @@ pip install opencv-python pyzbar pytesseract
    ```
 
 3. **Download Credentials**:
+
    - Save the JSON key as `credentials.json` in project root
    - **Never commit this file to version control**
 
@@ -159,7 +167,7 @@ import time
 from datetime import datetime
 
 from qr_processor import QRProcessor
-from camera_handler import CameraHandler  
+from camera_handler import CameraHandler
 from sheets_manager import SheetsManager
 from utils import validate_urk_number, extract_name_from_urk
 import config
@@ -170,159 +178,159 @@ class AttendanceSystem:
         self.root = tk.Tk()
         self.root.title("Smart Attendance System - Karunya Institute")
         self.root.geometry("1000x800")
-        
+
         # Initialize components
         self.qr_processor = QRProcessor()
         self.camera_handler = CameraHandler()
         self.sheets_manager = SheetsManager()
-        
+
         # GUI elements
         self.video_label = None
         self.status_label = None
         self.info_text = None
-        
+
         # Processing state
         self.processing = False
         self.last_scan_time = 0
         self.scan_cooldown = 3  # Seconds between scans
-        
+
         self.setup_gui()
         self.start_camera_thread()
-    
+
     def setup_gui(self):
         """Setup the graphical user interface"""
         # Main frame
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        
+
         # Title
-        title_label = ttk.Label(main_frame, text="Smart Attendance System", 
+        title_label = ttk.Label(main_frame, text="Smart Attendance System",
                                font=("Arial", 20, "bold"))
         title_label.grid(row=0, column=0, columnspan=2, pady=(0, 20))
-        
+
         # Video feed
         self.video_label = ttk.Label(main_frame, text="Camera Loading...")
         self.video_label.grid(row=1, column=0, padx=(0, 10), sticky=tk.W)
-        
+
         # Control panel
         control_frame = ttk.Frame(main_frame)
         control_frame.grid(row=1, column=1, sticky=(tk.W, tk.E, tk.N, tk.S))
-        
+
         # Status display
-        self.status_label = ttk.Label(control_frame, text="System Ready", 
+        self.status_label = ttk.Label(control_frame, text="System Ready",
                                      font=("Arial", 12, "bold"), foreground="green")
         self.status_label.grid(row=0, column=0, pady=(0, 10), sticky=tk.W)
-        
+
         # Information display
         self.info_text = tk.Text(control_frame, width=40, height=20, wrap=tk.WORD)
         self.info_text.grid(row=1, column=0, pady=(0, 10), sticky=(tk.W, tk.E, tk.N, tk.S))
-        
+
         # Scrollbar for text
         scrollbar = ttk.Scrollbar(control_frame, orient=tk.VERTICAL, command=self.info_text.yview)
         scrollbar.grid(row=1, column=1, sticky=(tk.N, tk.S))
         self.info_text.configure(yscrollcommand=scrollbar.set)
-        
+
         # Control buttons
         button_frame = ttk.Frame(control_frame)
         button_frame.grid(row=2, column=0, pady=(10, 0), sticky=tk.W)
-        
+
         ttk.Button(button_frame, text="Clear Log", command=self.clear_log).pack(side=tk.LEFT, padx=(0, 10))
         ttk.Button(button_frame, text="Test Connection", command=self.test_connection).pack(side=tk.LEFT)
-        
+
         # Configure grid weights
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         main_frame.columnconfigure(1, weight=1)
         main_frame.rowconfigure(1, weight=1)
         control_frame.rowconfigure(1, weight=1)
-    
+
     def start_camera_thread(self):
         """Start camera processing in background thread"""
         self.camera_thread = threading.Thread(target=self.camera_loop, daemon=True)
         self.camera_thread.start()
-    
+
     def camera_loop(self):
         """Main camera processing loop"""
         self.log_info("Starting camera...")
-        
+
         if not self.camera_handler.start_camera():
             self.log_error("Failed to start camera")
             return
-            
+
         self.log_info("Camera started successfully")
-        
+
         while True:
             frame = self.camera_handler.get_frame()
             if frame is None:
                 continue
-                
+
             # Process frame for barcodes
             processed_frame, detections = self.process_frame_for_qr(frame)
-            
+
             # Update GUI with processed frame
             self.update_video_display(processed_frame)
-            
+
             # Handle detections
             if detections and not self.processing:
                 current_time = time.time()
                 if current_time - self.last_scan_time > self.scan_cooldown:
                     self.handle_detection(detections[0])  # Process first detection
                     self.last_scan_time = current_time
-            
+
             time.sleep(0.03)  # ~30 FPS
-    
+
     def process_frame_for_qr(self, frame):
         """Process frame for barcode detection"""
         detections = self.qr_processor.detect_qr_codes(frame)
         processed_frame = frame.copy()
-        
+
         # Draw detection rectangles
         for detection in detections:
             points = detection.polygon
             if len(points) == 4:
                 pts = [[int(point.x), int(point.y)] for point in points]
                 cv2.polylines(processed_frame, [np.array(pts)], True, (0, 255, 0), 3)
-                
+
                 # Draw barcode type and data
-                cv2.putText(processed_frame, f"{detection.type.name}: {detection.data.decode()}", 
+                cv2.putText(processed_frame, f"{detection.type.name}: {detection.data.decode()}",
                            (pts[0][0], pts[0][1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-        
+
         return processed_frame, detections
-    
+
     def handle_detection(self, detection):
         """Handle a barcode detection"""
         if self.processing:
             return
-            
+
         self.processing = True
         self.update_status("Processing barcode...", "orange")
-        
+
         try:
             # Extract registration number
             reg_number = self.qr_processor.extract_registration_number(detection.data.decode())
-            
+
             if not reg_number:
                 self.log_error(f"No valid registration number found in: {detection.data.decode()}")
                 return
-                
+
             # Validate URK number
             if not validate_urk_number(reg_number):
                 self.log_error(f"Invalid registration number format: {reg_number}")
                 return
-                
+
             # Extract student name
             student_name = extract_name_from_urk(reg_number)
-            
+
             # Mark attendance
             success, message = self.sheets_manager.mark_attendance(reg_number, student_name)
-            
+
             if success:
                 self.log_success(f"✅ Attendance marked for {student_name} ({reg_number})")
                 self.update_status("Attendance marked successfully!", "green")
             else:
                 self.log_error(f"❌ Failed to mark attendance: {message}")
                 self.update_status("Failed to mark attendance", "red")
-                
+
         except Exception as e:
             self.log_error(f"Error processing detection: {str(e)}")
             self.update_status("Processing error", "red")
@@ -330,49 +338,49 @@ class AttendanceSystem:
             self.processing = False
             # Reset status after 3 seconds
             self.root.after(3000, lambda: self.update_status("System Ready", "green"))
-    
+
     def update_video_display(self, frame):
         """Update the video display with processed frame"""
         # Resize frame for display
         display_frame = cv2.resize(frame, (640, 480))
-        
+
         # Convert BGR to RGB
         rgb_frame = cv2.cvtColor(display_frame, cv2.COLOR_BGR2RGB)
-        
+
         # Convert to PIL Image
         pil_image = Image.fromarray(rgb_frame)
         photo = ImageTk.PhotoImage(pil_image)
-        
+
         # Update label
         self.video_label.configure(image=photo)
         self.video_label.image = photo  # Keep a reference
-    
+
     def update_status(self, message, color):
         """Update status label"""
         self.status_label.configure(text=message, foreground=color)
-    
+
     def log_info(self, message):
         """Log informational message"""
         timestamp = datetime.now().strftime("%H:%M:%S")
         self.info_text.insert(tk.END, f"[{timestamp}] ℹ️ {message}\n")
         self.info_text.see(tk.END)
-    
+
     def log_success(self, message):
         """Log success message"""
         timestamp = datetime.now().strftime("%H:%M:%S")
         self.info_text.insert(tk.END, f"[{timestamp}] {message}\n")
         self.info_text.see(tk.END)
-    
+
     def log_error(self, message):
         """Log error message"""
         timestamp = datetime.now().strftime("%H:%M:%S")
         self.info_text.insert(tk.END, f"[{timestamp}] ❌ {message}\n")
         self.info_text.see(tk.END)
-    
+
     def clear_log(self):
         """Clear the information log"""
         self.info_text.delete(1.0, tk.END)
-    
+
     def test_connection(self):
         """Test Google Sheets connection"""
         self.log_info("Testing Google Sheets connection...")
@@ -383,7 +391,7 @@ class AttendanceSystem:
                 self.log_error("❌ Google Sheets connection failed")
         except Exception as e:
             self.log_error(f"❌ Connection test error: {str(e)}")
-    
+
     def run(self):
         """Start the application"""
         try:
@@ -431,7 +439,7 @@ class QRProcessor:
             pyzbar.ZBarSymbol.DATAMATRIX,
             pyzbar.ZBarSymbol.PDF417
         ]
-        
+
         # Character correction mapping for common OCR errors
         self.corrections = {
             '%': 'R',  # Common misread in barcodes
@@ -442,75 +450,75 @@ class QRProcessor:
             'S': '5',  # Letter S mistaken for 5
             'G': '6',  # Letter G mistaken for 6
         }
-    
+
     def detect_qr_codes(self, frame):
         """
         Detect all supported barcodes in frame
-        
+
         Args:
             frame: OpenCV image frame
-            
+
         Returns:
             List of detected barcodes
         """
         try:
             # Convert to grayscale for better detection
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            
+
             # Apply image preprocessing for better detection
             enhanced = self.enhance_image(gray)
-            
+
             # Detect barcodes
             detections = pyzbar.decode(enhanced, symbols=self.supported_formats)
-            
+
             if detections:
                 logger.info(f"Detected {len(detections)} barcode(s)")
                 for detection in detections:
                     logger.info(f"Type: {detection.type}, Data: {detection.data.decode()}")
-            
+
             return detections
-            
+
         except Exception as e:
             logger.error(f"Error in barcode detection: {str(e)}")
             return []
-    
+
     def enhance_image(self, gray_image):
         """
         Enhance image for better barcode detection
-        
+
         Args:
             gray_image: Grayscale image
-            
+
         Returns:
             Enhanced image
         """
         # Apply Gaussian blur to reduce noise
         blurred = cv2.GaussianBlur(gray_image, (3, 3), 0)
-        
+
         # Apply adaptive thresholding
-        thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+        thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                      cv2.THRESH_BINARY, 11, 2)
-        
+
         # Apply morphological operations to clean up the image
         kernel = np.ones((2, 2), np.uint8)
         cleaned = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
-        
+
         return cleaned
-    
+
     def extract_registration_number(self, barcode_data):
         """
         Extract registration number from barcode data
-        
+
         Args:
             barcode_data: Raw barcode data string
-            
+
         Returns:
             Registration number or None if not found
         """
         try:
             # Apply character corrections
             corrected_data = self.apply_corrections(barcode_data)
-            
+
             # Patterns to match registration numbers
             patterns = [
                 r'URK\d{2}[A-Z]{2}\d{4}',  # Standard URK format: URK23AI1112
@@ -518,7 +526,7 @@ class QRProcessor:
                 r'URK\d{2}[A-Z]{3}\d{3}',  # Alternative format
                 r'\d{2}[A-Z]{2}\d{4}',     # Without URK prefix
             ]
-            
+
             for pattern in patterns:
                 matches = re.findall(pattern, corrected_data, re.IGNORECASE)
                 if matches:
@@ -526,58 +534,58 @@ class QRProcessor:
                     # Ensure it starts with URK
                     if not reg_number.startswith('URK'):
                         reg_number = 'URK' + reg_number
-                    
+
                     logger.info(f"Extracted registration number: {reg_number}")
                     return reg_number
-            
+
             logger.warning(f"No registration number found in: {corrected_data}")
             return None
-            
+
         except Exception as e:
             logger.error(f"Error extracting registration number: {str(e)}")
             return None
-    
+
     def apply_corrections(self, text):
         """
         Apply character corrections to improve accuracy
-        
+
         Args:
             text: Input text
-            
+
         Returns:
             Corrected text
         """
         corrected = text
         for wrong, correct in self.corrections.items():
             corrected = corrected.replace(wrong, correct)
-        
+
         if corrected != text:
             logger.info(f"Applied corrections: '{text}' -> '{corrected}'")
-        
+
         return corrected
-    
+
     def validate_barcode_data(self, data):
         """
         Validate if barcode data contains useful information
-        
+
         Args:
             data: Barcode data string
-            
+
         Returns:
             Boolean indicating if data is valid
         """
         # Check minimum length
         if len(data) < 5:
             return False
-            
+
         # Check if it contains alphanumeric characters
         if not re.search(r'[A-Za-z0-9]', data):
             return False
-            
+
         # Check if it's not just whitespace or special characters
         if data.strip() == '':
             return False
-            
+
         return True
 ```
 
@@ -603,7 +611,7 @@ class CameraHandler:
     def __init__(self, camera_index: int = 0, resolution: Tuple[int, int] = (1920, 1080)):
         """
         Initialize camera handler
-        
+
         Args:
             camera_index: Camera device index (0 for default)
             resolution: Desired camera resolution (width, height)
@@ -612,30 +620,30 @@ class CameraHandler:
         self.resolution = resolution
         self.cap = None
         self.is_running = False
-        
+
         # Camera parameters
         self.fps = 30
         self.buffer_size = 1  # Minimize buffer to reduce latency
-    
+
     def start_camera(self) -> bool:
         """
         Start camera capture
-        
+
         Returns:
             Boolean indicating success
         """
         try:
             # Try multiple camera indices
             camera_indices = [0, 1, 2, '/dev/video0', '/dev/video1', '/dev/video2']
-            
+
             for index in camera_indices:
                 logger.info(f"Trying camera index: {index}")
                 self.cap = cv2.VideoCapture(index)
-                
+
                 if self.cap.isOpened():
                     # Configure camera parameters
                     self.configure_camera()
-                    
+
                     # Test camera by reading a frame
                     ret, frame = self.cap.read()
                     if ret and frame is not None:
@@ -649,53 +657,53 @@ class CameraHandler:
                     if self.cap:
                         self.cap.release()
                     continue
-            
+
             logger.error("Failed to start any camera")
             return False
-            
+
         except Exception as e:
             logger.error(f"Error starting camera: {str(e)}")
             return False
-    
+
     def configure_camera(self):
         """Configure camera parameters for optimal performance"""
         if not self.cap:
             return
-            
+
         try:
             # Set resolution
             self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.resolution[0])
             self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.resolution[1])
-            
+
             # Set FPS
             self.cap.set(cv2.CAP_PROP_FPS, self.fps)
-            
+
             # Set buffer size to minimize latency
             self.cap.set(cv2.CAP_PROP_BUFFERSIZE, self.buffer_size)
-            
+
             # Set auto-focus (if supported)
             self.cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
-            
+
             # Get actual settings
             actual_width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             actual_height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             actual_fps = self.cap.get(cv2.CAP_PROP_FPS)
-            
+
             logger.info(f"Camera configured: {actual_width}x{actual_height} @ {actual_fps} FPS")
-            
+
         except Exception as e:
             logger.warning(f"Error configuring camera: {str(e)}")
-    
+
     def get_frame(self) -> Optional[cv2.Mat]:
         """
         Get current frame from camera
-        
+
         Returns:
             OpenCV frame or None if error
         """
         if not self.is_running or not self.cap:
             return None
-            
+
         try:
             ret, frame = self.cap.read()
             if ret and frame is not None:
@@ -703,11 +711,11 @@ class CameraHandler:
             else:
                 logger.warning("Failed to read frame from camera")
                 return None
-                
+
         except Exception as e:
             logger.error(f"Error getting frame: {str(e)}")
             return None
-    
+
     def stop_camera(self):
         """Stop camera capture and release resources"""
         try:
@@ -716,19 +724,19 @@ class CameraHandler:
                 self.cap.release()
                 self.cap = None
             logger.info("Camera stopped successfully")
-            
+
         except Exception as e:
             logger.error(f"Error stopping camera: {str(e)}")
-    
+
     def is_camera_available(self) -> bool:
         """Check if camera is available and working"""
         return self.is_running and self.cap is not None and self.cap.isOpened()
-    
+
     def get_camera_info(self) -> dict:
         """Get camera information and capabilities"""
         if not self.cap:
             return {}
-            
+
         try:
             info = {
                 'width': int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
@@ -743,15 +751,15 @@ class CameraHandler:
                 'exposure': self.cap.get(cv2.CAP_PROP_EXPOSURE),
             }
             return info
-            
+
         except Exception as e:
             logger.error(f"Error getting camera info: {str(e)}")
             return {}
-    
+
     def adjust_camera_settings(self, brightness=None, contrast=None, saturation=None):
         """
         Adjust camera settings for better image quality
-        
+
         Args:
             brightness: Brightness level (-1.0 to 1.0)
             contrast: Contrast level (0.0 to 2.0)
@@ -759,20 +767,20 @@ class CameraHandler:
         """
         if not self.cap:
             return
-            
+
         try:
             if brightness is not None:
                 self.cap.set(cv2.CAP_PROP_BRIGHTNESS, brightness)
                 logger.info(f"Set brightness to {brightness}")
-                
+
             if contrast is not None:
                 self.cap.set(cv2.CAP_PROP_CONTRAST, contrast)
                 logger.info(f"Set contrast to {contrast}")
-                
+
             if saturation is not None:
                 self.cap.set(cv2.CAP_PROP_SATURATION, saturation)
                 logger.info(f"Set saturation to {saturation}")
-                
+
         except Exception as e:
             logger.error(f"Error adjusting camera settings: {str(e)}")
 ```
@@ -809,7 +817,7 @@ class SheetsManager:
     def __init__(self, credentials_file: str = "credentials.json"):
         """
         Initialize Google Sheets manager
-        
+
         Args:
             credentials_file: Path to Google service account credentials
         """
@@ -817,19 +825,19 @@ class SheetsManager:
         self.service = None
         self.spreadsheet_id = None
         self.worksheet_name = "Attendance"
-        
+
         # Scopes required for Google Sheets API
         self.scopes = [
             'https://www.googleapis.com/auth/spreadsheets',
             'https://www.googleapis.com/auth/drive'
         ]
-        
+
         self.initialize_service()
-    
+
     def initialize_service(self) -> bool:
         """
         Initialize Google Sheets API service
-        
+
         Returns:
             Boolean indicating success
         """
@@ -837,24 +845,24 @@ class SheetsManager:
             if not os.path.exists(self.credentials_file):
                 logger.error(f"Credentials file not found: {self.credentials_file}")
                 return False
-            
+
             # Load service account credentials
             credentials = Credentials.from_service_account_file(
                 self.credentials_file, scopes=self.scopes)
-            
+
             # Build the service
             self.service = build('sheets', 'v4', credentials=credentials)
             logger.info("Google Sheets service initialized successfully")
-            
+
             # Get spreadsheet ID from config or create new one
             self.get_or_create_spreadsheet()
-            
+
             return True
-            
+
         except Exception as e:
             logger.error(f"Error initializing Google Sheets service: {str(e)}")
             return False
-    
+
     def get_or_create_spreadsheet(self):
         """Get existing spreadsheet or create new one"""
         try:
@@ -865,14 +873,14 @@ class SheetsManager:
                     config = json.load(f)
                     self.spreadsheet_id = config.get('spreadsheet_id')
                     logger.info(f"Loaded spreadsheet ID: {self.spreadsheet_id}")
-            
+
             if not self.spreadsheet_id:
                 # Create new spreadsheet
                 self.create_attendance_spreadsheet()
-                
+
         except Exception as e:
             logger.error(f"Error loading spreadsheet config: {str(e)}")
-    
+
     def create_attendance_spreadsheet(self):
         """Create a new attendance spreadsheet"""
         try:
@@ -886,55 +894,55 @@ class SheetsManager:
                     }
                 }]
             }
-            
+
             result = self.service.spreadsheets().create(body=spreadsheet).execute()
             self.spreadsheet_id = result['spreadsheetId']
-            
+
             # Save spreadsheet ID to config
             config = {'spreadsheet_id': self.spreadsheet_id}
             with open('sheets_config.json', 'w') as f:
                 json.dump(config, f)
-            
+
             logger.info(f"Created new spreadsheet: {self.spreadsheet_id}")
-            
+
             # Initialize headers
             self.initialize_headers()
-            
+
         except Exception as e:
             logger.error(f"Error creating spreadsheet: {str(e)}")
-    
+
     def initialize_headers(self):
         """Initialize spreadsheet headers"""
         try:
             headers = [
                 ["Registration Number", "Student Name", "Date", "Time", "Status"]
             ]
-            
+
             self.update_range("A1:E1", headers)
             logger.info("Spreadsheet headers initialized")
-            
+
         except Exception as e:
             logger.error(f"Error initializing headers: {str(e)}")
-    
+
     def mark_attendance(self, reg_number: str, student_name: str) -> Tuple[bool, str]:
         """
         Mark attendance for a student
-        
+
         Args:
             reg_number: Student registration number
             student_name: Student name
-            
+
         Returns:
             Tuple of (success, message)
         """
         try:
             current_date = date.today().strftime("%Y-%m-%d")
             current_time = datetime.now().strftime("%H:%M:%S")
-            
+
             # Check for duplicate entry
             if self.is_duplicate_entry(reg_number, current_date):
                 return False, f"Attendance already marked for {reg_number} today"
-            
+
             # Prepare attendance data
             attendance_data = [
                 reg_number,
@@ -943,77 +951,77 @@ class SheetsManager:
                 current_time,
                 "Present"
             ]
-            
+
             # Find next empty row
             next_row = self.get_next_empty_row()
-            
+
             # Insert attendance record
             range_name = f"{self.worksheet_name}!A{next_row}:E{next_row}"
             self.update_range(range_name, [attendance_data])
-            
+
             logger.info(f"Attendance marked: {reg_number} - {student_name}")
             return True, "Attendance marked successfully"
-            
+
         except Exception as e:
             logger.error(f"Error marking attendance: {str(e)}")
             return False, f"Error: {str(e)}"
-    
+
     def is_duplicate_entry(self, reg_number: str, date_str: str) -> bool:
         """
         Check if attendance is already marked for student on given date
-        
+
         Args:
             reg_number: Student registration number
             date_str: Date string (YYYY-MM-DD)
-            
+
         Returns:
             Boolean indicating if duplicate exists
         """
         try:
             # Get all attendance data
             result = self.get_range(f"{self.worksheet_name}!A:E")
-            
+
             if not result or 'values' not in result:
                 return False
-            
+
             values = result['values']
-            
+
             # Skip header row and check for duplicates
             for row in values[1:]:
                 if len(row) >= 3:  # Ensure row has enough columns
                     if row[0] == reg_number and row[2] == date_str:
                         logger.info(f"Duplicate entry found for {reg_number} on {date_str}")
                         return True
-            
+
             return False
-            
+
         except Exception as e:
             logger.error(f"Error checking duplicate entry: {str(e)}")
             return False
-    
+
     def get_next_empty_row(self) -> int:
         """
         Get the next empty row number
-        
+
         Returns:
             Row number for next entry
         """
         try:
             result = self.get_range(f"{self.worksheet_name}!A:A")
-            
+
             if not result or 'values' not in result:
                 return 2  # Start from row 2 (after header)
-            
+
             return len(result['values']) + 1
-            
+
         except Exception as e:
             logger.error(f"Error getting next empty row: {str(e)}")
             return 2
-    
+
     def update_range(self, range_name: str, values: List[List]):
         """
         Update a range in the spreadsheet
-        
+
         Args:
             range_name: Range to update (e.g., "A1:E1")
             values: 2D list of values to update
@@ -1022,27 +1030,27 @@ class SheetsManager:
             body = {
                 'values': values
             }
-            
+
             result = self.service.spreadsheets().values().update(
                 spreadsheetId=self.spreadsheet_id,
                 range=range_name,
                 valueInputOption='USER_ENTERED',
                 body=body
             ).execute()
-            
+
             logger.debug(f"Updated range {range_name}: {result.get('updatedCells', 0)} cells")
-            
+
         except Exception as e:
             logger.error(f"Error updating range {range_name}: {str(e)}")
             raise
-    
+
     def get_range(self, range_name: str) -> Optional[Dict]:
         """
         Get values from a range in the spreadsheet
-        
+
         Args:
             range_name: Range to get (e.g., "A1:E10")
-            
+
         Returns:
             Dictionary containing the values
         """
@@ -1051,35 +1059,35 @@ class SheetsManager:
                 spreadsheetId=self.spreadsheet_id,
                 range=range_name
             ).execute()
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Error getting range {range_name}: {str(e)}")
             return None
-    
+
     def get_attendance_summary(self, date_str: Optional[str] = None) -> List[Dict]:
         """
         Get attendance summary for a specific date
-        
+
         Args:
             date_str: Date string (YYYY-MM-DD), defaults to today
-            
+
         Returns:
             List of attendance records
         """
         try:
             if not date_str:
                 date_str = date.today().strftime("%Y-%m-%d")
-            
+
             result = self.get_range(f"{self.worksheet_name}!A:E")
-            
+
             if not result or 'values' not in result:
                 return []
-            
+
             values = result['values']
             attendance_records = []
-            
+
             # Skip header row and filter by date
             for row in values[1:]:
                 if len(row) >= 5 and row[2] == date_str:
@@ -1091,36 +1099,36 @@ class SheetsManager:
                         'status': row[4]
                     }
                     attendance_records.append(record)
-            
+
             return attendance_records
-            
+
         except Exception as e:
             logger.error(f"Error getting attendance summary: {str(e)}")
             return []
-    
+
     def test_connection(self) -> bool:
         """
         Test connection to Google Sheets
-        
+
         Returns:
             Boolean indicating if connection is working
         """
         try:
             if not self.service:
                 return False
-            
+
             # Try to access the spreadsheet
             result = self.service.spreadsheets().get(
                 spreadsheetId=self.spreadsheet_id
             ).execute()
-            
+
             logger.info("Google Sheets connection test successful")
             return True
-            
+
         except Exception as e:
             logger.error(f"Google Sheets connection test failed: {str(e)}")
             return False
-    
+
     def get_spreadsheet_url(self) -> str:
         """Get the URL to view the spreadsheet"""
         if self.spreadsheet_id:
@@ -1198,23 +1206,23 @@ logger = logging.getLogger(__name__)
 def validate_urk_number(reg_number: str) -> bool:
     """
     Validate URK registration number format
-    
+
     Args:
         reg_number: Registration number to validate
-        
+
     Returns:
         Boolean indicating if format is valid
     """
     if not reg_number:
         return False
-    
+
     # Standard URK format: URK23AI1112
     pattern = r'^URK\d{2}[A-Z]{2}\d{4}$'
-    
+
     if re.match(pattern, reg_number.upper()):
         logger.info(f"Valid URK number: {reg_number}")
         return True
-    
+
     logger.warning(f"Invalid URK number format: {reg_number}")
     return False
 
@@ -1222,24 +1230,24 @@ def extract_name_from_urk(reg_number: str) -> str:
     """
     Extract student name from URK registration number
     This is a simplified version - in reality, you'd query a database
-    
+
     Args:
         reg_number: URK registration number
-        
+
     Returns:
         Student name (generated or from database)
     """
     # For demo purposes, generate a name based on reg number
     # In production, this would query a student database
-    
+
     if not validate_urk_number(reg_number):
         return "Unknown Student"
-    
+
     # Extract year and department from URK number
     year = reg_number[3:5]  # e.g., "23"
     dept = reg_number[5:7]  # e.g., "AI"
     roll = reg_number[7:]   # e.g., "1112"
-    
+
     # Department mapping
     dept_names = {
         'AI': 'Artificial Intelligence',
@@ -1251,22 +1259,22 @@ def extract_name_from_urk(reg_number: str) -> str:
         'IT': 'Information Technology',
         'BT': 'Biotechnology'
     }
-    
+
     dept_name = dept_names.get(dept, 'Unknown Department')
-    
+
     # Generate a name (in production, query from database)
     student_name = f"Student {roll} ({dept_name})"
-    
+
     logger.info(f"Generated name for {reg_number}: {student_name}")
     return student_name
 
 def format_timestamp(timestamp_str: str) -> str:
     """
     Format timestamp for display
-    
+
     Args:
         timestamp_str: Timestamp string
-        
+
     Returns:
         Formatted timestamp
     """
@@ -1280,10 +1288,10 @@ def format_timestamp(timestamp_str: str) -> str:
 def sanitize_filename(filename: str) -> str:
     """
     Sanitize filename for safe file operations
-    
+
     Args:
         filename: Original filename
-        
+
     Returns:
         Sanitized filename
     """
@@ -1291,25 +1299,25 @@ def sanitize_filename(filename: str) -> str:
     invalid_chars = '<>:"/\\|?*'
     for char in invalid_chars:
         filename = filename.replace(char, '_')
-    
+
     return filename.strip()
 
 def log_system_info():
     """Log system information for debugging"""
     import platform
     import cv2
-    
+
     logger.info("=== System Information ===")
     logger.info(f"Platform: {platform.platform()}")
     logger.info(f"Python Version: {platform.python_version()}")
     logger.info(f"OpenCV Version: {cv2.__version__}")
-    
+
     try:
         import pyzbar
         logger.info(f"pyzbar Version: Available")
     except ImportError:
         logger.error("pyzbar not available")
-    
+
     try:
         from googleapiclient import __version__
         logger.info(f"Google API Client: Available")
@@ -1319,13 +1327,13 @@ def log_system_info():
 def create_debug_directories():
     """Create necessary directories for debugging"""
     import os
-    
+
     directories = [
         "debug_images",
         "logs",
         "temp"
     ]
-    
+
     for directory in directories:
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -1334,9 +1342,9 @@ def create_debug_directories():
 def get_camera_indices():
     """Get available camera indices"""
     import cv2
-    
+
     available_cameras = []
-    
+
     # Test camera indices 0-10
     for i in range(10):
         cap = cv2.VideoCapture(i)
@@ -1345,7 +1353,7 @@ def get_camera_indices():
             if ret:
                 available_cameras.append(i)
             cap.release()
-    
+
     logger.info(f"Available cameras: {available_cameras}")
     return available_cameras
 ```
@@ -1359,7 +1367,7 @@ def get_camera_indices():
 ```bash
 # Minimum Hardware
 - CPU: Dual-core 2.0 GHz or better
-- RAM: 4 GB minimum, 8 GB recommended  
+- RAM: 4 GB minimum, 8 GB recommended
 - Storage: 2 GB free space
 - Camera: USB camera or smartphone via Iriun Webcam
 - Network: Internet connection for Google Sheets sync
@@ -1440,6 +1448,7 @@ WantedBy=multi-user.target
 ### Common Issues & Solutions
 
 #### 1. Camera Not Working
+
 ```bash
 # Check available cameras
 ls /dev/video*
@@ -1452,6 +1461,7 @@ sudo usermod -a -G video $USER
 ```
 
 #### 2. Barcode Detection Issues
+
 ```python
 # Debug barcode detection
 from pyzbar import pyzbar
@@ -1466,6 +1476,7 @@ for barcode in barcodes:
 ```
 
 #### 3. Google Sheets Connection Problems
+
 ```python
 # Test Google Sheets connection
 from sheets_manager import SheetsManager
@@ -1478,6 +1489,7 @@ else:
 ```
 
 #### 4. Performance Optimization
+
 ```python
 # Optimize camera settings for better performance
 import cv2
@@ -1494,22 +1506,24 @@ cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)   # Enable autofocus
 
 ### System Performance Benchmarks
 
-| Metric | Target | Achieved |
-|--------|--------|----------|
-| Barcode Detection Speed | < 100ms | ~50ms |
-| Camera FPS | 30 FPS | 25-30 FPS |
-| Memory Usage | < 512MB | ~300MB |
-| Google Sheets Sync | < 2s | ~1.5s |
-| Accuracy Rate | > 95% | ~98% |
+| Metric                  | Target  | Achieved  |
+| ----------------------- | ------- | --------- |
+| Barcode Detection Speed | < 100ms | ~50ms     |
+| Camera FPS              | 30 FPS  | 25-30 FPS |
+| Memory Usage            | < 512MB | ~300MB    |
+| Google Sheets Sync      | < 2s    | ~1.5s     |
+| Accuracy Rate           | > 95%   | ~98%      |
 
 ### Optimization Tips
 
 1. **Camera Optimization**:
+
    - Use proper lighting conditions
    - Position camera 15-30cm from ID card
    - Ensure ID card is flat and unobstructed
 
 2. **Performance Tuning**:
+
    - Reduce camera buffer size for lower latency
    - Use threading for non-blocking operations
    - Implement frame skipping for better performance
@@ -1524,18 +1538,21 @@ cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)   # Enable autofocus
 ## 🔐 Security Considerations
 
 ### Data Protection
+
 - **Never commit credentials.json** to version control
 - Use environment variables for sensitive configuration
 - Implement proper access controls for Google Sheets
 - Regular credential rotation
 
 ### Privacy Compliance
+
 - Implement data retention policies
 - Ensure GDPR/local privacy law compliance
 - Secure storage of attendance data
 - User consent mechanisms
 
 ### System Security
+
 ```bash
 # Firewall configuration
 sudo ufw enable
@@ -1553,6 +1570,7 @@ chmod +x *.sh
 ## 🚀 Advanced Features
 
 ### 1. Multi-Camera Support
+
 ```python
 class MultiCameraHandler:
     def __init__(self, camera_indices=[0, 1]):
@@ -1561,7 +1579,7 @@ class MultiCameraHandler:
             handler = CameraHandler(index)
             if handler.start_camera():
                 self.cameras.append(handler)
-    
+
     def get_all_frames(self):
         frames = []
         for camera in self.cameras:
@@ -1572,11 +1590,12 @@ class MultiCameraHandler:
 ```
 
 ### 2. Real-time Analytics
+
 ```python
 class AttendanceAnalytics:
     def __init__(self, sheets_manager):
         self.sheets_manager = sheets_manager
-    
+
     def get_daily_stats(self, date_str=None):
         records = self.sheets_manager.get_attendance_summary(date_str)
         return {
@@ -1587,6 +1606,7 @@ class AttendanceAnalytics:
 ```
 
 ### 3. Web Dashboard
+
 ```python
 from flask import Flask, render_template, jsonify
 
@@ -1607,11 +1627,12 @@ def today_attendance():
 ## 📱 Mobile Integration
 
 ### React Native App Structure
+
 ```javascript
 // AttendanceApp.js
-import React, { useState, useEffect } from 'react';
-import { Camera } from 'expo-camera';
-import { BarCodeScanner } from 'expo-barcode-scanner';
+import React, { useState, useEffect } from "react";
+import { Camera } from "expo-camera";
+import { BarCodeScanner } from "expo-barcode-scanner";
 
 export default function AttendanceApp() {
   const [hasPermission, setHasPermission] = useState(null);
@@ -1620,10 +1641,10 @@ export default function AttendanceApp() {
   const handleBarCodeScanned = ({ type, data }) => {
     setScanned(true);
     // Send data to Python backend
-    fetch('http://your-server.com/api/scan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ barcode: data })
+    fetch("http://your-server.com/api/scan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ barcode: data }),
     });
   };
 
@@ -1638,40 +1659,41 @@ export default function AttendanceApp() {
 ## 🔄 Continuous Integration
 
 ### GitHub Actions Workflow
+
 ```yaml
 # .github/workflows/ci.yml
 name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v2
-    
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.12
-    
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
-        sudo apt-get install libzbar0
-    
-    - name: Run tests
-      run: |
-        python -m pytest tests/
-    
-    - name: Lint code
-      run: |
-        flake8 *.py
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.12
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          sudo apt-get install libzbar0
+
+      - name: Run tests
+        run: |
+          python -m pytest tests/
+
+      - name: Lint code
+        run: |
+          flake8 *.py
 ```
 
 ---
@@ -1679,6 +1701,7 @@ jobs:
 ## 📈 Monitoring & Logging
 
 ### Comprehensive Logging Setup
+
 ```python
 import logging
 import logging.handlers
@@ -1686,14 +1709,14 @@ from datetime import datetime
 
 def setup_logging():
     """Setup comprehensive logging system"""
-    
+
     # Create logs directory
     os.makedirs('logs', exist_ok=True)
-    
+
     # Configure root logger
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
-    
+
     # Console handler
     console_handler = logging.StreamHandler()
     console_formatter = logging.Formatter(
@@ -1701,7 +1724,7 @@ def setup_logging():
     )
     console_handler.setFormatter(console_formatter)
     logger.addHandler(console_handler)
-    
+
     # File handler with rotation
     file_handler = logging.handlers.RotatingFileHandler(
         'logs/attendance.log',
@@ -1713,7 +1736,7 @@ def setup_logging():
     )
     file_handler.setFormatter(file_formatter)
     logger.addHandler(file_handler)
-    
+
     # Error handler for critical issues
     error_handler = logging.handlers.SMTPHandler(
         mailhost='smtp.gmail.com',
@@ -1731,17 +1754,21 @@ def setup_logging():
 ## 🎯 Future Enhancements
 
 ### Roadmap
+
 1. **Machine Learning Integration**
+
    - Face recognition backup system
    - Behavior pattern analysis
    - Fraud detection algorithms
 
 2. **IoT Integration**
+
    - RFID card support
    - NFC-enabled devices
    - Bluetooth beacons
 
 3. **Advanced Analytics**
+
    - Predictive attendance modeling
    - Student engagement metrics
    - Automated reporting
@@ -1756,17 +1783,20 @@ def setup_logging():
 ## 📚 Resources & References
 
 ### Documentation Links
+
 - [OpenCV Python Documentation](https://docs.opencv.org/4.x/d6/d00/tutorial_py_root.html)
 - [pyzbar Documentation](https://pypi.org/project/pyzbar/)
 - [Google Sheets API Guide](https://developers.google.com/sheets/api)
 - [Tkinter Tutorial](https://docs.python.org/3/library/tkinter.html)
 
 ### Learning Resources
+
 - [Computer Vision with Python](https://www.pyimagesearch.com/)
 - [Google API Python Client](https://github.com/googleapis/google-api-python-client)
 - [Barcode Processing Techniques](https://www.datamatrix.codes/)
 
 ### Community Support
+
 - [OpenCV Community Forum](https://forum.opencv.org/)
 - [Python Computer Vision Facebook Group](https://www.facebook.com/groups/PythonComputerVision/)
 - [Stack Overflow - opencv tag](https://stackoverflow.com/questions/tagged/opencv)
@@ -1781,9 +1811,10 @@ This **Smart Attendance System** represents a complete, production-ready solutio
 ✅ **Cloud Integration** with Google Sheets  
 ✅ **User-Friendly Interface** with Tkinter GUI  
 ✅ **Robust Error Handling** and validation  
-✅ **Comprehensive Documentation** and setup guides  
+✅ **Comprehensive Documentation** and setup guides
 
 ### Key Achievements
+
 - **98% accuracy rate** in barcode detection
 - **Sub-second processing** time
 - **Zero-configuration** Google Sheets integration
@@ -1791,6 +1822,7 @@ This **Smart Attendance System** represents a complete, production-ready solutio
 - **Production-ready deployment**
 
 ### Impact
+
 - Eliminates manual attendance marking
 - Reduces human error to near zero
 - Provides real-time attendance tracking
@@ -1812,11 +1844,11 @@ For technical support, feature requests, or contributions:
 
 ---
 
-*This documentation was created for the Smart Attendance System v1.0*  
-*Last updated: August 2025*  
-*Total pages: 50+ pages of comprehensive documentation*
+_This documentation was created for the Smart Attendance System v1.0_  
+_Last updated: August 2025_  
+_Total pages: 50+ pages of comprehensive documentation_
 
 ---
 
 **© 2025 Smart Attendance System - Karunya Institute**  
-*Open Source Project - MIT License*
+_Open Source Project - MIT License_

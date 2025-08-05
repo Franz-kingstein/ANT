@@ -10,10 +10,12 @@
 ## 📋 Setup Steps
 
 ### 1. Install Iriun Webcam on Your Phone
+
 - **Android**: [Google Play Store](https://play.google.com/store/apps/details?id=com.jacksoftw.webcam)
 - **iOS**: [App Store](https://apps.apple.com/app/iriun-webcam/id1461267396)
 
 ### 2. Linux Desktop Setup (Already Done ✅)
+
 ```bash
 # Already installed via DEB package
 dpkg -l | grep iriun
@@ -21,18 +23,21 @@ dpkg -l | grep iriun
 ```
 
 ### 3. Start Iriun Webcam Service
+
 ```bash
 # Start the service (run this before using attendance system)
 /usr/local/bin/iriunwebcam
 ```
 
 ### 4. Connect Your Phone
+
 1. **Connect both devices to the same WiFi network**
 2. **Open Iriun Webcam app on your phone**
 3. **The app should automatically detect your Linux computer**
 4. **Tap to connect**
 
 ### 5. Test the Connection
+
 ```bash
 cd /home/franz/Documents/attendance
 source attendance_env/bin/activate
@@ -42,6 +47,7 @@ python test_iriun.py
 ## 🎥 Camera Configuration
 
 Current settings in `config.py`:
+
 ```python
 CAMERA_INDEX = 2      # Iriun Webcam
 CAMERA_WIDTH = 1920   # Full HD for better QR detection
@@ -52,21 +58,27 @@ FPS = 30
 ## 🔧 Troubleshooting
 
 ### Problem: Camera not detected
+
 **Solution:**
+
 1. Make sure Iriun service is running: `/usr/local/bin/iriunwebcam`
 2. Check phone app is connected
 3. Verify both devices on same WiFi
 4. Run: `v4l2-ctl --list-devices` to see if `/dev/video2` exists
 
 ### Problem: Poor image quality
+
 **Solution:**
+
 1. Clean your phone camera lens
 2. Ensure good lighting
 3. Hold phone steady
 4. Use phone's back camera (usually better quality)
 
 ### Problem: QR codes not detected
+
 **Solution:**
+
 1. Hold ID card at proper distance (15-30cm from phone)
 2. Ensure QR code is flat and well-lit
 3. Try different angles
@@ -75,12 +87,14 @@ FPS = 30
 ## 🎯 Optimal Setup for Attendance System
 
 ### Phone Positioning
+
 - **Distance**: 20-30cm from ID card
 - **Angle**: Perpendicular to card surface
 - **Lighting**: Good ambient light, avoid shadows
 - **Stability**: Use phone stand or tripod for best results
 
 ### ID Card Positioning
+
 - **Hold steady** for 2-3 seconds
 - **Keep flat** - avoid curved or bent cards
 - **QR code visible** and unobstructed
@@ -89,6 +103,7 @@ FPS = 30
 ## 🚀 Running the System
 
 1. **Start Iriun Webcam service:**
+
    ```bash
    /usr/local/bin/iriunwebcam
    ```
@@ -96,6 +111,7 @@ FPS = 30
 2. **Connect phone app to computer**
 
 3. **Run attendance system:**
+
    ```bash
    cd /home/franz/Documents/attendance
    source attendance_env/bin/activate
@@ -110,6 +126,7 @@ FPS = 30
 ## 📊 Expected Performance
 
 With Iriun Webcam (1920x1080):
+
 - ✅ **QR Code Detection**: ~95% success rate
 - ✅ **Text OCR Fallback**: ~80% success rate
 - ✅ **Combined Success**: ~98% attendance marking

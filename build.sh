@@ -1,4 +1,3 @@
-# Render.com Build Script
 #!/bin/bash
 
 echo "🚀 Starting Smart Attendance System deployment on Render..."
@@ -8,24 +7,38 @@ echo "📦 Installing system dependencies..."
 apt-get update
 apt-get install -y libzbar0 libzbar-dev
 
-# Install Python dependencies
-echo "🐍 Installing Python dependencies..."
-pip install --upgrade pip
-pip install -r requirements.txt
+# Upgrade pip and related tools
+echo "🔧 Upgrading pip..."
+pip install --upgrade pip setuptools wheel
 
-echo "✅ Build completed successfully!"ld Script
-#!/bin/bash
+# Try to install from minimal requirements first
+echo "🐍 Installing dependencies from minimal requirements..."
+if pip install -r requirements-minimal.txt; then
+    echo "✅ Minimal requirements installed successfully"
+else
+    echo "⚠️ Minimal requirements failed, trying individual installs..."
 
-echo "🚀 Starting Smart Attendance System deployment on Render..."
+    # Install critical packages
+    pip install Flask==3.0.0
+    pip install gunicorn==21.2.0
+    pip install numpy==1.24.4
+    pip install requests==2.31.0
 
-# Install system dependencies
-echo "📦 Installing system dependencies..."
-apt-get update
-apt-get install -y libzbar0 libzbar-dev
+    # Try optional packages individually
+    pip install opencv-python-headless==4.7.1.72 || echo "⚠️ OpenCV failed"
+    pip install pyzbar==0.1.9 || echo "⚠️ pyzbar failed"
+    pip install google-api-python-client==2.100.0 || echo "⚠️ Google API failed"
+    pip install Pillow==9.5.0 || echo "⚠️ Pillow failed"
+fi
 
-# Install Python dependencies
-echo "🐍 Installing Python dependencies..."
-pip install --upgrade pip
-pip install -r requirements-web.txt || pip install -r requirements.txt
+# Verify gunicorn installation
+echo "✅ Verifying gunicorn installation..."
+if gunicorn --version; then
+    echo "✅ Gunicorn is ready!"
+else
+    echo "❌ Gunicorn not found, installing as fallback..."
+    pip install gunicorn --force-reinstall
+fi
 
 echo "✅ Build completed successfully!"
+echo "🚀 Your Smart Attendance System is ready to deploy on Render!"

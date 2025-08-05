@@ -1,28 +1,29 @@
 # Smart Attendance System Requirements
-# Works for both desktop and web deployment
+# Compatible with Python 3.13 and Render.com
 
-# Computer Vision and Image Processing
-opencv-python-headless==4.8.1.78  # headless version for web deployment
-Pillow==10.1.0
-numpy==1.26.2
+# Web Framework (MUST be first for deployment)
+Flask>=3.0.0
+gunicorn>=21.0.0
+Werkzeug>=3.0.0
+
+# Computer Vision and Image Processing (using compatible versions)
+opencv-python-headless>=4.8.0
+Pillow>=10.0.0
+numpy>=1.24.0
 
 # Barcode Detection
-pyzbar==0.1.9
-
-# OCR (for desktop version)
-pytesseract==0.3.10
+pyzbar>=0.1.9
 
 # Google Sheets Integration
-google-api-python-client==2.108.0
-google-auth==2.25.2
-google-auth-oauthlib==1.1.0
-google-auth-httplib2==0.2.0
-
-# Web Framework (for web deployment)
-Flask==3.0.0
-gunicorn==21.2.0
+google-api-python-client>=2.100.0
+google-auth>=2.20.0
+google-auth-oauthlib>=1.0.0
+google-auth-httplib2>=0.2.0
 
 # Other Dependencies
-requests==2.31.0
-cachetools==5.3.2
-python-dotenv==1.0.0
+requests>=2.30.0
+cachetools>=5.0.0
+python-dotenv>=1.0.0
+
+# OCR (optional for desktop version)
+pytesseract>=0.3.10

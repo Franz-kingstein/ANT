@@ -1,0 +1,21 @@
+# Minimal requirements for web deployment
+# Only essential packages to avoid build failures
+
+Flask==3.0.0
+gunicorn==21.2.0
+Werkzeug==3.0.1
+
+# Essential for basic functionality
+numpy==1.24.4
+requests==2.31.0
+
+# Try simpler versions
+opencv-python-headless==4.7.1.72
+pyzbar==0.1.9
+
+# Google Sheets (essential)
+google-api-python-client==2.100.0
+google-auth==2.23.0
+
+# Image processing (try older stable version)
+Pillow==9.5.0

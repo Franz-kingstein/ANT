@@ -2,10 +2,15 @@
 
 echo "🚀 Starting Smart Attendance System deployment on Render..."
 
-# Install system dependencies for barcode detection
-echo "📦 Installing system dependencies..."
-apt-get update
-apt-get install -y libzbar0 libzbar-dev
+# If inside Docker skip apt-get and rely on Docker base image
+if [ -f /.dockerenv ]; then
+  echo "🐳 Detected Docker environment—skipping system package installation"
+else
+  # Install system dependencies for barcode detection
+  echo "📦 Installing system dependencies..."
+  apt-get update
+  apt-get install -y libzbar0 libzbar-dev
+fi
 
 # Upgrade pip and related tools
 echo "🔧 Upgrading pip..."
